@@ -1,0 +1,99 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() { return request.auth != null; }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+    function isValidId(id) { 
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+
+    // --- Validation Helpers --- //
+    
+    function isValidRecipe(data) {
+      return data.keys().hasAll(['title', 'description', 'prepTime', 'servings', 'difficulty', 'cuisine', 'authorId', 'createdAt']) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.description is string && data.description.size() <= 2000 &&
+             data.authorId == request.auth.uid &&
+             data.servings is number &&
+             data.cuisine is string && data.cuisine.size() <= 100;
+    }
+
+    function isValidReview(data) {
+      return data.keys().hasAll(['userId', 'user', 'rating', 'comment', 'date']) &&
+             data.userId == request.auth.uid &&
+             data.user is string && data.user.size() <= 100 &&
+             data.rating is number && data.rating >= 0 && data.rating <= 5 &&
+             data.comment is string && data.comment.size() <= 1000 &&
+             data.date is string && data.date.size() <= 50;
+    }
+
+    function isValidFavorite(data) {
+      return data.keys().hasAll(['recipeId', 'addedAt']) &&
+             data.recipeId is string && data.recipeId.size() <= 128 &&
+             data.addedAt is string;
+    }
+
+    function isValidShoppingListItem(data) {
+      return data.keys().hasAll(['name', 'amount', 'unit', 'checked']) &&
+             data.name is string && data.name.size() <= 200 &&
+             data.amount is number &&
+             data.unit is string && data.unit.size() <= 50 &&
+             data.checked is bool;
+    }
+
+    function isValidPlannerSlot(data) {
+      return data.keys().hasAll(['day', 'meal', 'recipeId', 'updatedAt']) &&
+             data.day is string && data.day.size() <= 20 &&
+             data.meal is string && data.meal.size() <= 20 &&
+             data.recipeId is string && data.recipeId.size() <= 128 &&
+             data.updatedAt is string && data.updatedAt.size() <= 50;
+    }
+
+    // --- Collections --- //
+
+    match /recipes/{recipeId} {
+      allow read: if true; // Public recipes
+      allow create: if isSignedIn() && isValidId(recipeId) && isValidRecipe(incoming()) && incoming().createdAt is string;
+      allow update: if isSignedIn() && isValidId(recipeId) && existing().authorId == request.auth.uid && isValidRecipe(incoming()) && incoming().createdAt == existing().createdAt;
+      allow delete: if isSignedIn() && isValidId(recipeId) && existing().authorId == request.auth.uid;
+      
+      match /reviews/{reviewId} {
+        allow read: if true;
+        allow create: if isSignedIn() && isValidId(reviewId) && isValidReview(incoming());
+        allow update: if isSignedIn() && isValidId(reviewId) && existing().userId == request.auth.uid && isValidReview(incoming()) && incoming().userId == existing().userId;
+        allow delete: if isSignedIn() && isValidId(reviewId) && existing().userId == request.auth.uid;
+      }
+    }
+
+    match /users/{userId} {
+      allow read: if true; // We can let other users read display names
+      allow create: if isSignedIn() && userId == request.auth.uid && incoming().keys().hasAll(['email']) && incoming().email is string && incoming().email.size() <= 255;
+      allow update: if isSignedIn() && userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'email']) && incoming().displayName is string && incoming().displayName.size() <= 50;
+      
+      match /favorites/{recipeId} {
+        allow read: if isSignedIn() && userId == request.auth.uid;
+        allow create: if isSignedIn() && userId == request.auth.uid && isValidId(recipeId) && isValidFavorite(incoming());
+        allow delete: if isSignedIn() && userId == request.auth.uid && isValidId(recipeId);
+      }
+
+      match /shoppingList/{itemId} {
+        allow read: if isSignedIn() && userId == request.auth.uid;
+        allow create: if isSignedIn() && userId == request.auth.uid && isValidId(itemId) && isValidShoppingListItem(incoming());
+        allow update: if isSignedIn() && userId == request.auth.uid && isValidId(itemId) && isValidShoppingListItem(incoming());
+        allow delete: if isSignedIn() && userId == request.auth.uid && isValidId(itemId);
+      }
+
+      match /planner/{slotId} {
+        allow read: if isSignedIn() && userId == request.auth.uid;
+        allow create: if isSignedIn() && userId == request.auth.uid && isValidId(slotId) && isValidPlannerSlot(incoming());
+        allow update: if isSignedIn() && userId == request.auth.uid && isValidId(slotId) && isValidPlannerSlot(incoming());
+        allow delete: if isSignedIn() && userId == request.auth.uid && isValidId(slotId);
+      }
+    }
+  }
+}

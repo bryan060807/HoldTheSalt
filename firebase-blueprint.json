@@ -1,0 +1,136 @@
+{
+  "entities": {
+    "Ingredient": {
+      "title": "Ingredient",
+      "description": "An ingredient for a recipe",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "amount": { "type": ["number", "string"] },
+        "unit": { "type": "string" }
+      },
+      "required": ["name", "amount", "unit"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "A user review for a recipe",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user": { "type": "string" },
+        "userId": { "type": "string" },
+        "rating": { "type": "number" },
+        "comment": { "type": "string" },
+        "date": { "type": "string" }
+      },
+      "required": ["user", "rating", "comment", "date"]
+    },
+    "NutritionalInfo": {
+      "title": "NutritionalInfo",
+      "description": "Nutritional info",
+      "type": "object",
+      "properties": {
+        "calories": { "type": "number" },
+        "protein": { "type": "string" },
+        "carbs": { "type": "string" },
+        "fat": { "type": "string" }
+      },
+      "required": ["calories"]
+    },
+    "Recipe": {
+      "title": "Recipe",
+      "description": "A cooking recipe",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "prepTime": { "type": "string" },
+        "cookTime": { "type": "string" },
+        "servings": { "type": "number" },
+        "difficulty": { "type": "string" },
+        "cuisine": { "type": "string" },
+        "dietary": { "type": "array" },
+        "ingredients": { "type": "array" },
+        "instructions": { "type": "array" },
+        "nutritionalInfo": { "$ref": "#/entities/NutritionalInfo" },
+        "image": { "type": "string" },
+        "author": { "type": "string" },
+        "authorId": { "type": "string" },
+        "averageRating": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["title", "description", "prepTime", "servings", "difficulty", "cuisine", "ingredients", "instructions"]
+    },
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User specific application data (Favorites array is replaced by subcollection here for scale or kept small)",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" }
+      }
+    },
+    "Favorite": {
+      "title": "Favorite",
+      "description": "User's favorite recipe",
+      "type": "object",
+      "properties": {
+        "recipeId": { "type": "string" },
+        "addedAt": { "type": "string" }
+      },
+      "required": ["recipeId", "addedAt"]
+    },
+    "ShoppingListItem": {
+      "title": "ShoppingListItem",
+      "description": "An item in the user's shopping list",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "amount": { "type": "number" },
+        "unit": { "type": "string" },
+        "checked": { "type": "boolean" },
+        "addedAt": { "type": "string" }
+      },
+      "required": ["name", "amount", "unit", "checked"]
+    },
+    "PlannerSlot": {
+      "title": "PlannerSlot",
+      "description": "A scheduled meal in the planner",
+      "type": "object",
+      "properties": {
+        "day": { "type": "string" },
+        "meal": { "type": "string" },
+        "recipeId": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["day", "meal", "recipeId"]
+    }
+  },
+  "firestore": {
+    "recipes/{recipeId}": {
+      "schema": "#/entities/Recipe",
+      "description": "Global list of recipes"
+    },
+    "recipes/{recipeId}/reviews/{reviewId}": {
+      "schema": "#/entities/Review",
+      "description": "Reviews for a recipe"
+    },
+    "users/{userId}": {
+      "schema": "#/entities/UserProfile",
+      "description": "User's public/profile data"
+    },
+    "users/{userId}/favorites/{recipeId}": {
+      "schema": "#/entities/Favorite",
+      "description": "User tracking their favorite recipes"
+    },
+    "users/{userId}/shoppingList/{itemId}": {
+      "schema": "#/entities/ShoppingListItem",
+      "description": "User shopping list items"
+    },
+    "users/{userId}/planner/{slotId}": {
+      "schema": "#/entities/PlannerSlot",
+      "description": "User meals planned (slotId = day_meal)"
+    }
+  }
+}

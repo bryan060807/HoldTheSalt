@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent-gold: #C5A059;
+  --color-bg-dark: #0F0F10;
+  --color-text-main: #E2E2E2;
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: var(--color-text-main);
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.glass {
+  background: rgba(30, 30, 35, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.recipe-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background 0.2s ease;
+}
+
+.recipe-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+
+  nav, header, button {
+    display: none !important;
+  }
+}

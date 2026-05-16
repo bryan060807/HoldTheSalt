@@ -1,0 +1,8 @@
+{
+  "name": "Hold the Salt",
+  "description": "Comprehensive recipe database, meal planner, shopping list generator, and AI ingredient substitute helper.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
